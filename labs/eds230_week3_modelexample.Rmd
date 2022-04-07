@@ -1,0 +1,28 @@
+---
+title: 'Week 3: Sample Model'
+author: "Scout Leonard"
+date: "4/7/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Try implementing Okun's Law as a function in R. 
+
+In the code chunk below, I write a function which represents Okun's Law, which calculate % change in gross national product (GNP) using the change in unemployment rate, as a percentage. The returned decimal value represents the percent change in GNP. 
+
+```{r}
+okuns_law = function(deltaEmp, slope, intercept) {
+  deltaGNP = slope * deltaEmp + intercept
+  return(deltaGNP)
+}
+```
+
+What is the change in GDP for unemployment rate change of 3%? 
+
+```{r}
+okuns_law(deltaEmp = 3, slope = 1.827, intercept = 0.856)
+```
+
