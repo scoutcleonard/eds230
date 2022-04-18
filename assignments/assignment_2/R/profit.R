@@ -1,6 +1,7 @@
 #' Profit Function
 #' 
-#' This function computes almond profit (tons/acre)
-#' @param precip January precipitation (mm)
-#' @param temp February minimum temperature (C)
+#' This function computes almond profit ($)
+#' @param anomaly almond yield anomaly (tons/acre)
+#' @param yield almond yield  (tons/acre/year)
+#' @param market_val
 #' 

@@ -1,0 +1,21 @@
+---
+title: "EDS 230 Assignment 3"
+author: "Scout Leonard"
+date: "4/16/2022"
+output: html_document
+---
+
+Develop and profit model for our almond yield (this can be made up - think about what the parameters will be). 
+
+# Part 1 
+
+**Do a simple informal sensitivity analysis of almond yield profit using at least 2 parameters.**
+
+# Part 2 
+
+**Create a single graph of the results - you can decide what is the most meaningful graph.**
+
+# Part 3
+
+**Output the graph as a stand alone image (pdf, tiff, jpeg).**
+
