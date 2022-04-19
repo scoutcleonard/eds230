@@ -1,0 +1,147 @@
+---
+title: "EDS 230/ESM232: Assignment 3"
+author: "Roshni Katrak-Adefowora, Scout Leonard, Nikole Vannest"
+date: '2022-04-14'
+output: html_document
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+packages=c("here",
+           "readr",
+           "tidyverse")
+
+for (i in packages) {
+  if (require(i,character.only=TRUE)==FALSE) {
+    install.packages(i,repos='http://cran.us.r-project.org')
+  }
+  else {
+    require(i,character.only=TRUE)
+  }
+}
+
+source(here("assignments", "assignment_2", "R", "almond_yield_function.R"))
+```
+ 
+# Read in Climate Data
+
+```{r}
+climate_data <- read.table(here("assignments", "assignment_2", "data", "clim.txt"))
+options(scipen = 999)
+```
+
+# Subset Climate Data
+
+```{r}
+#filter climate dataset for february minimum temperature
+feb_min_temps <- climate_data %>%
+  filter(month == 2) %>% 
+  group_by(wy) %>% 
+  summarise(feb_min_temp_c = mean(tmin_c))
+
+#filter climate dataset for february precipitation 
+jan_precip <- climate_data %>% 
+  filter(month == 1) %>%
+  group_by(wy) %>% 
+  summarise(total_jan_precip_mm = sum(precip))
+```
+
+# Summarize Results
+
+```{r}
+years_list <- jan_precip$wy
+anomaly <- c()
+
+for (i in 1:length(years_list)){
+  
+  anomaly[i] <- almond_yield(precip = jan_precip$total_jan_precip_mm[i], temp = feb_min_temps$feb_min_temp_c[i])
+  
+}
+
+anomaly_df <- as.data.frame(cbind(years_list, 
+                                  anomaly,
+                                  jan_precip$total_jan_precip_mm,
+                                  feb_min_temps$feb_min_temp_c))
+
+```
+
+# Informal Sensitivity Analysis: Almond Profit Model
+
+In the code chunk below, we complete an informal sensitivity analysis of almond yield profit using at least 2 parameter. The parameters included in our profit model include **average almond yield** `average_yield` in tons per acre, **price** `price` in U.S. dollars, the average price of almonds per pound for a given year, and **anomaly** `anomaly`, the almond yield anomaly in tons per acre, as generated from the R script for our almond yield anomaly function, `almond_yield.R`. 
+
+[Basis for the 1.05 average annual almond yield in tons per acre value comes from UC Davis researchers Daniel Geisseler and William R. Horwath in collaboration with the California Department of Food and Agriculture.](https://apps1.cdfa.ca.gov/FertilizerResearch/docs/Almond_Production_CA.pdf)
+
+The average price of almonds is data from the US Department of Agriculture: USDA Farm Price Received.
+
+```{r profit}
+source(here("R", "profit.R"))
+
+# Historical prices of almonds (lbs)
+prices <- read.table(here("data", "hist_price.txt"), 
+                     header = T) %>% 
+  filter(!Date %in% c(1996, 1997, 2011:2020))
+
+# Convert lbs to tons
+prices$value_tons <- prices$Value_lbs * 2000
+
+#add column with average yield
+prices <- prices %>% 
+  mutate(average_yield = 1.05)
+
+# run model with average price
+# (Anomaly isn't actual yield bc it has negative values, how do we want to spin this?)
+
+money <- profit(anomaly = anomaly, 
+                price = mean(prices$value_tons),
+                average_yield = prices$average_yield)
+
+# create sensitivity analysis with range of prices from prices data frame?
+
+
+```
+
+
+```{r plot data}
+# preliminary plot
+
+## create data frame of years, profit, and anomaly values
+money_df <- as.data.frame(cbind(years_list, 
+                                money,
+                                anomaly))
+
+## plot profit per acre time series 
+money_df %>% ggplot(aes(x = years_list)) +
+  geom_point(aes(y = money)) +
+  geom_line(aes(y = money)) + 
+  theme_minimal() +
+  labs(title = "California Yearly Almond Profits Per Acre (1989 - 2010)",
+       x = "Year",
+       y = "Profit ($)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15))+
+  scale_y_continuous(labels = scales::comma)
+
+# save to viz directory in repo
+ggsave("almond_profit_viz.png",
+       path = here("viz"))
+```
+
+# Sensitivity Analysis
+
+```{r}
+#number years
+number_years = length(years_list)
+
+profit_model = as.data.frame(matrix(nrow = number_years, ncol = 3))
+
+colnames(profit_model_res) = c("yield", "anomaly", "price")
+
+#generate yield and price values 
+profit_model$yield = rnorm(mean = 1.05, sd = 0.1, n = number_years)
+
+profit_model$price = runif(min = 0.86, max = 4.00, n = number_years)
+
+
+```
+
