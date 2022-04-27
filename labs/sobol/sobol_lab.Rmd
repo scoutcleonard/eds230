@@ -1,0 +1,79 @@
+---
+title: "Sobol Lab"
+author: "Scout Leonard"
+date: '2022-04-26'
+output: html_document
+---
+
+# Load Libraries
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+packages=c("here",
+           "tidyverse",
+           "ggplot2",
+          "pse",
+          "sensitivity")
+
+for (i in packages) {
+  if (require(i,character.only=TRUE)==FALSE) {
+    install.packages(i,repos='http://cran.us.r-project.org')
+  }
+  else {
+    require(i,character.only=TRUE)
+  }
+}
+
+source("labs/sobol/atm_conductance.R")
+```
+
+# Sobol Sensitivity Analysis
+
+## Set Parameters
+
+```{r}
+np = 1000
+
+#make sample
+h = runif(min = 9.5, max = 10.5, n = np)
+v = rnorm(mean = 250, sd = 30, n = np)
+kd = rnorm(mean = 0.7, sd = (0.7 * 0.01), n = np)
+ko = rnorm(mean = 0.1, sd = (0.1 * 0.01), n = np)
+
+X1 = cbind.data.frame(h, v, kd, ko)
+
+#repeat sampling
+h = runif(min = 9.5, max = 10.5, n = np)
+v = rnorm(mean = 250, sd = 30, n = np)
+kd = rnorm(mean = 0.7, sd = (0.7 * 0.01), n = np)
+ko = rnorm(mean = 0.1, sd = (0.1 * 0.01), n = np)
+
+X2 = cbind.data.frame(h, v, kd, ko)
+```
+
+```{r}
+sens_Catm_Sobol = sobolSalt(model = NULL, X1, X2, nboot = 100)
+
+# Take a look at the Sobol generated sensitivity object
+# your parameters sets for sensitivity analysis are in X
+```
+
+```{r}
+parms = as.data.frame(sens_Catm_Sobol$X)
+colnames(parms) = colnames(X1)
+res = pmap_dbl(parms, atm_conductance)
+
+sens_Catm_Sobol = sensitivity::tell(sens_Catm_Sobol, res, res.names="ga")
+
+# main effect:  partitions variance (main effect without co-variance) - sums approximately to one
+sens_Catm_Sobol$S
+```
+
+```{r}
+# useful to add names
+row.names(sens_Catm_Sobol$S) = colnames(parms)
+sens_Catm_Sobol$S
+```
+
